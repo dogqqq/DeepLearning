@@ -3,10 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class LogisticRegression():
-	def __init__(self, lr, epoch, datas):
+	def __init__(self, lr, epoch, datas, err):
 		self.lr = lr
 		self.datas = datas
 		self.epoch = epoch
+		self.err_boundary = err
 		self.w = np.random.uniform(0, 0.1, 3)
 
 	def sigmoid(self, n):
@@ -16,23 +17,29 @@ class LogisticRegression():
 		self.w += (self.lr*delta_w)
 
 	def train(self):
-		delta_e = 0.0
-		for i in range(self.epoch):
+		N = self.datas.shape[0]
+		now_epoch = 0
+		err = 0.0
+		for now_epoch in range(self.epoch):
 			err = 0.0
+
 			for data in self.datas:
 				# [w0, w1, w2] * [1, x1, x2]
 				n = np.dot(self.w, np.array([1,data[0],data[1]]))
 				a = self.sigmoid(n)
-
-				# err = -(y*ln(a) + (1-y)*ln(1-a))
-				# err = -(data[2]*np.log(a) + (1-data[2])*np.log(1-a))
-				# print(err)
-
-				# (y-a)*x
+				# cross_error = -(y*ln(a) + (1-y)*ln(1-a))
+				err += (-(data[2]*np.log(a)+(1-data[2])*np.log(1-a)))
 				self.update((data[2]-a)*np.array([1,data[0],data[1]]))
-			
+
+			# print(err/N)
+			if err/N < self.err_boundary:
+				print("Error: {} < {} (small enough)".format(err/N, self.err_boundary))
+				break
+
 		print("w0: {}, w1: {}, w2: {}".format(self.w[0], self.w[1], self.w[2]))	
-		print("Total epoch: ", self.epoch)
+		print("Stop Epoch: {}, Total Epoch: {}".format(now_epoch+1, self.epoch))
+		if now_epoch+1 == self.epoch:
+			print("Error: {}".format(err/N))
 	
 
 	def predict(self, test_data):
